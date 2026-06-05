@@ -5,86 +5,21 @@
   <title>HashRise Firebase</title>
   <style>
     * { box-sizing: border-box; }
-
-    body {
-      margin: 0;
-      font-family: system-ui, sans-serif;
-      background: linear-gradient(135deg, #080b12, #151b2e);
-      color: white;
-    }
-
-    .app {
-      max-width: 900px;
-      margin: auto;
-      padding: 24px;
-    }
-
-    h1 {
-      margin-bottom: 4px;
-    }
-
-    .sub {
-      color: #94a3b8;
-      margin-top: 0;
-    }
-
-    .grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 12px;
-      margin: 20px 0;
-    }
-
-    .card {
-      background: rgba(30, 41, 59, 0.9);
-      border: 1px solid rgba(148, 163, 184, 0.18);
-      border-radius: 18px;
-      padding: 18px;
-      box-shadow: 0 10px 25px rgba(0,0,0,.25);
-    }
-
-    .label {
-      color: #94a3b8;
-      font-size: 13px;
-    }
-
-    .value {
-      font-size: 26px;
-      font-weight: 800;
-      margin-top: 6px;
-    }
-
-    .status {
-      padding: 12px;
-      background: #020617;
-      border-radius: 14px;
-      color: #cbd5e1;
-      margin-top: 18px;
-    }
-
-    button {
-      border: 0;
-      border-radius: 12px;
-      padding: 12px 16px;
-      background: #2563eb;
-      color: white;
-      font-weight: bold;
-      cursor: pointer;
-      margin: 6px;
-    }
-
-    button:hover {
-      filter: brightness(1.15);
-    }
-
-    @media(max-width:700px) {
-      .grid {
-        grid-template-columns: 1fr;
-      }
-    }
+    body { margin: 0; font-family: system-ui, sans-serif; background: linear-gradient(135deg, #080b12, #151b2e); color: white; }
+    .app { max-width: 900px; margin: auto; padding: 24px; }
+    h1 { margin-bottom: 4px; }
+    .sub { color: #94a3b8; margin-top: 0; }
+    .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin: 20px 0; }
+    .card { background: rgba(30, 41, 59, 0.9); border: 1px solid rgba(148, 163, 184, 0.18); border-radius: 18px; padding: 18px; box-shadow: 0 10px 25px rgba(0,0,0,.25); }
+    .label { color: #94a3b8; font-size: 13px; }
+    .value { font-size: 26px; font-weight: 800; margin-top: 6px; }
+    .small { font-size: 14px; word-break: break-all; }
+    .status { padding: 12px; background: #020617; border-radius: 14px; color: #cbd5e1; margin-top: 18px; }
+    button { border: 0; border-radius: 12px; padding: 12px 16px; background: #2563eb; color: white; font-weight: bold; cursor: pointer; margin: 6px; }
+    button:hover { filter: brightness(1.15); }
+    @media(max-width:700px) { .grid { grid-template-columns: 1fr; } }
   </style>
 </head>
-
 <body>
   <div class="app">
     <h1>HashRise</h1>
@@ -92,48 +27,40 @@
 
     <div class="grid">
       <div class="card">
-        <div class="label">Day</div>
-        <div class="value"><span id="day">-</span></div>
+        <div class="label">市場更新</div>
+        <div class="value small"><span id="marketTime">未更新</span></div>
       </div>
-
       <div class="card">
         <div class="label">BTC価格</div>
         <div class="value">$<span id="btcPrice">-</span></div>
       </div>
-
       <div class="card">
         <div class="label">LUMA価格</div>
         <div class="value">$<span id="lumaPrice">-</span></div>
       </div>
-
       <div class="card">
         <div class="label">USD</div>
         <div class="value">$<span id="usd">-</span></div>
       </div>
-
       <div class="card">
         <div class="label">BTC</div>
         <div class="value"><span id="btc">-</span></div>
       </div>
-
       <div class="card">
         <div class="label">LUMA</div>
         <div class="value"><span id="luma">-</span></div>
       </div>
-
       <div class="card">
         <div class="label">採掘力</div>
         <div class="value"><span id="th">-</span> TH/s</div>
       </div>
-
       <div class="card">
         <div class="label">効率</div>
         <div class="value">x<span id="miningBoost">-</span></div>
       </div>
-
       <div class="card">
-        <div class="label">UID</div>
-        <div class="value" style="font-size:12px" id="uid">未ログイン</div>
+        <div class="label">最新ニュース</div>
+        <div class="value small" id="lastEvent">-</div>
       </div>
     </div>
 
@@ -142,28 +69,13 @@
       <button onclick="buyLUMA()">LUMA購入テスト</button>
     </div>
 
-    <div class="status" id="status">
-      接続準備中...
-    </div>
+    <div class="status" id="status">接続準備中...</div>
   </div>
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-app.js";
-
-    import {
-      getAuth,
-      signInAnonymously,
-      onAuthStateChanged
-    } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-auth.js";
-
-    import {
-      getFirestore,
-      doc,
-      getDoc,
-      setDoc,
-      updateDoc,
-      onSnapshot
-    } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-firestore.js";
+    import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-auth.js";
+    import { getFirestore, doc, getDoc, setDoc, updateDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-firestore.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyCYiKr4fC_BLFotJluoRB_ScoVja7odLPQ",
@@ -182,47 +94,40 @@
     let uid = null;
     let userData = null;
     let gameData = null;
-
     const statusEl = document.getElementById("status");
 
-    function status(text) {
-      statusEl.textContent = text;
+    function status(text) { statusEl.textContent = text; }
+
+    function formatMarketTime(ms) {
+      if (!ms) return "未更新";
+      const date = new Date(ms);
+      return date.toLocaleString("ja-JP", {
+        month: "2-digit",
+        day: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit"
+      });
     }
 
     function updateGameUI() {
       if (!gameData) return;
-
-      document.getElementById("day").textContent = gameData.day ?? "-";
-      document.getElementById("btcPrice").textContent =
-        Number(gameData.btcPrice ?? 0).toLocaleString();
-
-      document.getElementById("lumaPrice").textContent =
-        Number(gameData.lumaPrice ?? 0).toFixed(3);
+      document.getElementById("marketTime").textContent = formatMarketTime(gameData.lastTickAt);
+      document.getElementById("btcPrice").textContent = Number(gameData.btcPrice ?? 0).toLocaleString();
+      document.getElementById("lumaPrice").textContent = Number(gameData.lumaPrice ?? 0).toFixed(3);
+      document.getElementById("lastEvent").textContent = gameData.lastEvent ?? "通常相場。";
     }
 
     function updateUserUI() {
       if (!userData) return;
-
-      document.getElementById("usd").textContent =
-        Number(userData.usd ?? 0).toFixed(2);
-
-      document.getElementById("btc").textContent =
-        Number(userData.btc ?? 0).toFixed(8);
-
-      document.getElementById("luma").textContent =
-        Number(userData.luma ?? 0).toFixed(2);
-
-      document.getElementById("th").textContent =
-        Number(userData.th ?? 0).toFixed(2);
-
-      document.getElementById("miningBoost").textContent =
-        Number(userData.miningBoost ?? 1).toFixed(2);
+      document.getElementById("usd").textContent = Number(userData.usd ?? 0).toFixed(2);
+      document.getElementById("btc").textContent = Number(userData.btc ?? 0).toFixed(8);
+      document.getElementById("luma").textContent = Number(userData.luma ?? 0).toFixed(2);
+      document.getElementById("th").textContent = Number(userData.th ?? 0).toFixed(2);
+      document.getElementById("miningBoost").textContent = Number(userData.miningBoost ?? 1).toFixed(2);
     }
 
     async function createUserIfNeeded(user) {
       uid = user.uid;
-      document.getElementById("uid").textContent = uid;
-
       const userRef = doc(db, "users", uid);
       const snap = await getDoc(userRef);
 
@@ -236,7 +141,6 @@
           miningActive: true,
           createdAt: Date.now()
         });
-
         status("新規ユーザーを作成しました。");
       } else {
         status("既存ユーザーでログインしました。");
@@ -250,25 +154,20 @@
 
     function listenGameState() {
       const gameRef = doc(db, "game", "state");
-
       onSnapshot(gameRef, (snapshot) => {
         if (!snapshot.exists()) {
           status("game/state が存在しません。Firestoreで作成してください。");
           return;
         }
-
         gameData = snapshot.data();
         updateGameUI();
-
         status("Firestoreとリアルタイム同期中。");
       });
     }
 
     async function start() {
       status("匿名ログイン中...");
-
       await signInAnonymously(auth);
-
       onAuthStateChanged(auth, async (user) => {
         if (user) {
           await createUserIfNeeded(user);
@@ -279,49 +178,27 @@
 
     window.buyBTC = async function () {
       if (!uid || !userData || !gameData) return;
-
       const amount = Number(prompt("何ドル分BTCを購入しますか？"));
       if (!amount || amount <= 0) return;
-
-      if (userData.usd < amount) {
-        status("USDが足りません。");
-        return;
-      }
-
-      const fee = 0.005;
-      const btcBought = (amount * (1 - fee)) / gameData.btcPrice;
-
-      const userRef = doc(db, "users", uid);
-
-      await updateDoc(userRef, {
+      if (userData.usd < amount) return status("USDが足りません。");
+      const btcBought = (amount * 0.995) / gameData.btcPrice;
+      await updateDoc(doc(db, "users", uid), {
         usd: userData.usd - amount,
         btc: userData.btc + btcBought
       });
-
       status(`$${amount.toFixed(2)}分のBTCを購入しました。`);
     };
 
     window.buyLUMA = async function () {
       if (!uid || !userData || !gameData) return;
-
       const amount = Number(prompt("何ドル分LUMAを購入しますか？"));
       if (!amount || amount <= 0) return;
-
-      if (userData.usd < amount) {
-        status("USDが足りません。");
-        return;
-      }
-
-      const fee = 0.005;
-      const lumaBought = (amount * (1 - fee)) / gameData.lumaPrice;
-
-      const userRef = doc(db, "users", uid);
-
-      await updateDoc(userRef, {
+      if (userData.usd < amount) return status("USDが足りません。");
+      const lumaBought = (amount * 0.995) / gameData.lumaPrice;
+      await updateDoc(doc(db, "users", uid), {
         usd: userData.usd - amount,
         luma: userData.luma + lumaBought
       });
-
       status(`$${amount.toFixed(2)}分のLUMAを購入しました。`);
     };
 
