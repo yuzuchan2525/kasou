@@ -6,67 +6,71 @@
   <style>
     * { box-sizing: border-box; }
     body { margin: 0; font-family: system-ui, sans-serif; background: linear-gradient(135deg, #080b12, #151b2e); color: white; }
-    .app { max-width: 900px; margin: auto; padding: 24px; }
+    .app { max-width: 1100px; margin: auto; padding: 24px; }
     h1 { margin-bottom: 4px; }
     .sub { color: #94a3b8; margin-top: 0; }
-    .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin: 20px 0; }
+    .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin: 20px 0; }
     .card { background: rgba(30, 41, 59, 0.9); border: 1px solid rgba(148, 163, 184, 0.18); border-radius: 18px; padding: 18px; box-shadow: 0 10px 25px rgba(0,0,0,.25); }
     .label { color: #94a3b8; font-size: 13px; }
-    .value { font-size: 26px; font-weight: 800; margin-top: 6px; }
+    .value { font-size: 24px; font-weight: 800; margin-top: 6px; }
     .small { font-size: 14px; word-break: break-all; }
+    .layout { display: grid; grid-template-columns: 2fr 1fr; gap: 14px; }
+    canvas { width: 100%; height: 330px; background: #020617; border-radius: 16px; }
     .status { padding: 12px; background: #020617; border-radius: 14px; color: #cbd5e1; margin-top: 18px; }
     button { border: 0; border-radius: 12px; padding: 12px 16px; background: #2563eb; color: white; font-weight: bold; cursor: pointer; margin: 6px; }
     button:hover { filter: brightness(1.15); }
-    @media(max-width:700px) { .grid { grid-template-columns: 1fr; } }
+    .sell { background: #7c3aed; }
+    .upgrade { background: #16a34a; }
+    table { width: 100%; border-collapse: collapse; font-size: 14px; }
+    td, th { padding: 8px; border-bottom: 1px solid rgba(148,163,184,.18); text-align: left; }
+    th { color: #94a3b8; font-weight: 600; }
+    @media(max-width:850px) { .grid { grid-template-columns: 1fr 1fr; } .layout { grid-template-columns: 1fr; } }
   </style>
 </head>
 <body>
   <div class="app">
     <h1>HashRise</h1>
-    <p class="sub">Firebaseリアルタイム同期版</p>
+    <p class="sub">仮想通貨マイニング & トレード</p>
 
     <div class="grid">
+      <div class="card"><div class="label">市場更新</div><div class="value small"><span id="marketTime">未更新</span></div></div>
+      <div class="card"><div class="label">総資産</div><div class="value">$<span id="totalValue">-</span></div></div>
+      <div class="card"><div class="label">BTC価格</div><div class="value">$<span id="btcPrice">-</span></div></div>
+      <div class="card"><div class="label">LUMA価格</div><div class="value">$<span id="lumaPrice">-</span></div></div>
+      <div class="card"><div class="label">USD</div><div class="value">$<span id="usd">-</span></div></div>
+      <div class="card"><div class="label">BTC</div><div class="value"><span id="btc">-</span></div></div>
+      <div class="card"><div class="label">LUMA</div><div class="value"><span id="luma">-</span></div></div>
+      <div class="card"><div class="label">採掘状態</div><div class="value small" id="miningStatus">-</div></div>
+      <div class="card"><div class="label">採掘力</div><div class="value"><span id="th">-</span> TH/s</div></div>
+      <div class="card"><div class="label">効率</div><div class="value">x<span id="miningBoost">-</span></div></div>
+      <div class="card"><div class="label">最新採掘</div><div class="value small"><span id="lastMined">-</span> BTC</div></div>
+      <div class="card"><div class="label">最新ニュース</div><div class="value small" id="lastEvent">-</div></div>
+    </div>
+
+    <div class="layout">
       <div class="card">
-        <div class="label">市場更新</div>
-        <div class="value small"><span id="marketTime">未更新</span></div>
+        <canvas id="chart" width="780" height="330"></canvas>
+        <div>
+          <button onclick="setChart('BTC')">BTCチャート</button>
+          <button onclick="setChart('LUMA')">LUMAチャート</button>
+        </div>
       </div>
       <div class="card">
-        <div class="label">BTC価格</div>
-        <div class="value">$<span id="btcPrice">-</span></div>
-      </div>
-      <div class="card">
-        <div class="label">LUMA価格</div>
-        <div class="value">$<span id="lumaPrice">-</span></div>
-      </div>
-      <div class="card">
-        <div class="label">USD</div>
-        <div class="value">$<span id="usd">-</span></div>
-      </div>
-      <div class="card">
-        <div class="label">BTC</div>
-        <div class="value"><span id="btc">-</span></div>
-      </div>
-      <div class="card">
-        <div class="label">LUMA</div>
-        <div class="value"><span id="luma">-</span></div>
-      </div>
-      <div class="card">
-        <div class="label">採掘力</div>
-        <div class="value"><span id="th">-</span> TH/s</div>
-      </div>
-      <div class="card">
-        <div class="label">効率</div>
-        <div class="value">x<span id="miningBoost">-</span></div>
-      </div>
-      <div class="card">
-        <div class="label">最新ニュース</div>
-        <div class="value small" id="lastEvent">-</div>
+        <h2>ランキング</h2>
+        <table>
+          <thead><tr><th>#</th><th>名前</th><th>総資産</th></tr></thead>
+          <tbody id="rankingBody"><tr><td colspan="3">読み込み中...</td></tr></tbody>
+        </table>
       </div>
     </div>
 
-    <div>
-      <button onclick="buyBTC()">BTC購入テスト</button>
-      <button onclick="buyLUMA()">LUMA購入テスト</button>
+    <div class="card" style="margin-top:14px">
+      <button onclick="buyBTC()">BTC購入</button>
+      <button class="sell" onclick="sellBTC()">BTC売却</button>
+      <button onclick="buyLUMA()">LUMA購入</button>
+      <button class="sell" onclick="sellLUMA()">LUMA売却</button>
+      <button class="upgrade" onclick="buyTH()">採掘力+1TH</button>
+      <button class="upgrade" onclick="upgradeBoost()">LUMAで効率強化</button>
     </div>
 
     <div class="status" id="status">接続準備中...</div>
@@ -90,31 +94,22 @@
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
     const db = getFirestore(app);
-
-    let uid = null;
-    let userData = null;
-    let gameData = null;
+    let uid = null, userData = null, gameData = null, rankingData = null;
+    let chartAsset = "BTC";
     const statusEl = document.getElementById("status");
-
     function status(text) { statusEl.textContent = text; }
-
-    function formatMarketTime(ms) {
-      if (!ms) return "未更新";
-      const date = new Date(ms);
-      return date.toLocaleString("ja-JP", {
-        month: "2-digit",
-        day: "2-digit",
-        hour: "2-digit",
-        minute: "2-digit"
-      });
-    }
+    function money(n) { return Number(n ?? 0).toLocaleString(undefined, { maximumFractionDigits: 2 }); }
+    function formatMarketTime(ms) { if (!ms) return "未更新"; return new Date(ms).toLocaleString("ja-JP", { month:"2-digit", day:"2-digit", hour:"2-digit", minute:"2-digit" }); }
+    function getTotalValue() { if (!userData || !gameData) return 0; return Number(userData.usd??0)+Number(userData.btc??0)*Number(gameData.btcPrice??0)+Number(userData.luma??0)*Number(gameData.lumaPrice??0); }
 
     function updateGameUI() {
       if (!gameData) return;
       document.getElementById("marketTime").textContent = formatMarketTime(gameData.lastTickAt);
-      document.getElementById("btcPrice").textContent = Number(gameData.btcPrice ?? 0).toLocaleString();
+      document.getElementById("btcPrice").textContent = money(gameData.btcPrice);
       document.getElementById("lumaPrice").textContent = Number(gameData.lumaPrice ?? 0).toFixed(3);
       document.getElementById("lastEvent").textContent = gameData.lastEvent ?? "通常相場。";
+      updateUserUI();
+      drawChart();
     }
 
     function updateUserUI() {
@@ -124,83 +119,109 @@
       document.getElementById("luma").textContent = Number(userData.luma ?? 0).toFixed(2);
       document.getElementById("th").textContent = Number(userData.th ?? 0).toFixed(2);
       document.getElementById("miningBoost").textContent = Number(userData.miningBoost ?? 1).toFixed(2);
+      document.getElementById("lastMined").textContent = Number(userData.lastMinedBTC ?? 0).toFixed(8);
+      document.getElementById("miningStatus").textContent = userData.miningActive === false ? "停止中 / 維持費不足" : "稼働中";
+      document.getElementById("totalValue").textContent = money(getTotalValue());
+    }
+
+    function updateRankingUI() {
+      const body = document.getElementById("rankingBody");
+      const players = rankingData?.players ?? [];
+      if (!players.length) { body.innerHTML = '<tr><td colspan="3">まだランキングなし</td></tr>'; return; }
+      body.innerHTML = players.map((p, i) => `<tr><td>${i+1}</td><td>${p.name}</td><td>$${money(p.totalValue)}</td></tr>`).join("");
     }
 
     async function createUserIfNeeded(user) {
       uid = user.uid;
       const userRef = doc(db, "users", uid);
       const snap = await getDoc(userRef);
-
       if (!snap.exists()) {
-        await setDoc(userRef, {
-          usd: 100,
-          btc: 0,
-          luma: 0,
-          th: 1,
-          miningBoost: 1,
-          miningActive: true,
-          createdAt: Date.now()
-        });
+        await setDoc(userRef, { usd:100, btc:0, luma:0, th:1, thPrice:14, miningBoost:1, miningActive:true, createdAt:Date.now() });
         status("新規ユーザーを作成しました。");
-      } else {
-        status("既存ユーザーでログインしました。");
-      }
-
-      onSnapshot(userRef, (snapshot) => {
-        userData = snapshot.data();
-        updateUserUI();
-      });
+      } else status("既存ユーザーでログインしました。");
+      onSnapshot(userRef, (snapshot) => { userData = snapshot.data(); updateUserUI(); });
     }
 
     function listenGameState() {
-      const gameRef = doc(db, "game", "state");
-      onSnapshot(gameRef, (snapshot) => {
-        if (!snapshot.exists()) {
-          status("game/state が存在しません。Firestoreで作成してください。");
-          return;
-        }
-        gameData = snapshot.data();
-        updateGameUI();
-        status("Firestoreとリアルタイム同期中。");
+      onSnapshot(doc(db, "game", "state"), (snapshot) => {
+        if (!snapshot.exists()) return status("game/state が存在しません。");
+        gameData = snapshot.data(); updateGameUI(); status("Firestoreとリアルタイム同期中。");
+      });
+      onSnapshot(doc(db, "game", "ranking"), (snapshot) => {
+        rankingData = snapshot.exists() ? snapshot.data() : { players: [] };
+        updateRankingUI();
       });
     }
 
     async function start() {
       status("匿名ログイン中...");
       await signInAnonymously(auth);
-      onAuthStateChanged(auth, async (user) => {
-        if (user) {
-          await createUserIfNeeded(user);
-          listenGameState();
-        }
-      });
+      onAuthStateChanged(auth, async (user) => { if (user) { await createUserIfNeeded(user); listenGameState(); } });
     }
 
-    window.buyBTC = async function () {
+    async function updateUser(fields) { await updateDoc(doc(db, "users", uid), fields); }
+    window.buyBTC = async () => tradeBuy("btc", "BTC", gameData.btcPrice);
+    window.buyLUMA = async () => tradeBuy("luma", "LUMA", gameData.lumaPrice);
+    window.sellBTC = async () => tradeSell("btc", "BTC", gameData.btcPrice, 8);
+    window.sellLUMA = async () => tradeSell("luma", "LUMA", gameData.lumaPrice, 2);
+
+    async function tradeBuy(key, label, price) {
       if (!uid || !userData || !gameData) return;
-      const amount = Number(prompt("何ドル分BTCを購入しますか？"));
+      const amount = Number(prompt(`何ドル分${label}を購入しますか？`));
       if (!amount || amount <= 0) return;
-      if (userData.usd < amount) return status("USDが足りません。");
-      const btcBought = (amount * 0.995) / gameData.btcPrice;
-      await updateDoc(doc(db, "users", uid), {
-        usd: userData.usd - amount,
-        btc: userData.btc + btcBought
-      });
-      status(`$${amount.toFixed(2)}分のBTCを購入しました。`);
+      if (Number(userData.usd) < amount) return status("USDが足りません。");
+      await updateUser({ usd: Number(userData.usd) - amount, [key]: Number(userData[key] ?? 0) + (amount * 0.995) / price });
+      status(`$${amount.toFixed(2)}分の${label}を購入しました。`);
+    }
+
+    async function tradeSell(key, label, price, digits) {
+      if (!uid || !userData || !gameData) return;
+      const amount = Number(prompt(`何${label}売却しますか？`));
+      if (!amount || amount <= 0) return;
+      if (Number(userData[key] ?? 0) < amount) return status(`${label}が足りません。`);
+      const gain = amount * price * 0.995;
+      await updateUser({ usd: Number(userData.usd) + gain, [key]: Number(userData[key]) - amount });
+      status(`${amount.toFixed(digits)} ${label}を売却して $${gain.toFixed(2)} 獲得。`);
+    }
+
+    window.buyTH = async function () {
+      const price = Number(userData?.thPrice ?? 14);
+      if (Number(userData.usd) < price) return status(`採掘力購入には $${price.toFixed(2)} 必要です。`);
+      await updateUser({ usd: Number(userData.usd)-price, th: Number(userData.th??1)+1, thPrice: price*1.08, miningActive:true });
+      status("採掘力を1TH増やしました。");
     };
 
-    window.buyLUMA = async function () {
-      if (!uid || !userData || !gameData) return;
-      const amount = Number(prompt("何ドル分LUMAを購入しますか？"));
-      if (!amount || amount <= 0) return;
-      if (userData.usd < amount) return status("USDが足りません。");
-      const lumaBought = (amount * 0.995) / gameData.lumaPrice;
-      await updateDoc(doc(db, "users", uid), {
-        usd: userData.usd - amount,
-        luma: userData.luma + lumaBought
-      });
-      status(`$${amount.toFixed(2)}分のLUMAを購入しました。`);
+    window.upgradeBoost = async function () {
+      if (Number(userData.luma ?? 0) < 50) return status("効率強化には50 LUMA必要です。");
+      await updateUser({ luma: Number(userData.luma)-50, miningBoost: Number(userData.miningBoost??1)*1.15 });
+      status("採掘効率を強化しました。");
     };
+
+    window.setChart = function(asset) { chartAsset = asset; drawChart(); };
+
+    function drawChart() {
+      const canvas = document.getElementById("chart");
+      const ctx = canvas.getContext("2d");
+      ctx.clearRect(0,0,canvas.width,canvas.height);
+      ctx.fillStyle = "#020617"; ctx.fillRect(0,0,canvas.width,canvas.height);
+      const candles = chartAsset === "BTC" ? (gameData?.btcCandles ?? []) : (gameData?.lumaCandles ?? []);
+      ctx.fillStyle = "#fff"; ctx.font = "18px system-ui"; ctx.fillText(`${chartAsset}/USD ローソク足`, 22, 28);
+      if (!candles.length) { ctx.fillStyle="#94a3b8"; ctx.fillText("相場更新後にチャートが表示されます",22,60); return; }
+      const prices = candles.flatMap(c => [c.high, c.low]);
+      const max = Math.max(...prices), min = Math.min(...prices);
+      const pad=42, w=canvas.width-pad*2, h=canvas.height-pad*2, step=w/candles.length;
+      ctx.strokeStyle="#1e293b";
+      for(let i=0;i<5;i++){ const y=pad+h/4*i; ctx.beginPath(); ctx.moveTo(pad,y); ctx.lineTo(canvas.width-pad,y); ctx.stroke(); }
+      candles.forEach((c,i)=>{
+        const x=pad+i*step+step/2;
+        const yH=map(c.high,min,max,canvas.height,pad), yL=map(c.low,min,max,canvas.height,pad), yO=map(c.open,min,max,canvas.height,pad), yC=map(c.close,min,max,canvas.height,pad);
+        const up=c.close>=c.open; ctx.strokeStyle=up?"#22c55e":"#ef4444"; ctx.fillStyle=ctx.strokeStyle;
+        ctx.beginPath(); ctx.moveTo(x,yH); ctx.lineTo(x,yL); ctx.stroke();
+        ctx.fillRect(x-step*.25, Math.min(yO,yC), step*.5, Math.max(3, Math.abs(yC-yO)));
+      });
+      ctx.fillStyle="#94a3b8"; ctx.font="12px system-ui"; ctx.fillText(`High $${max.toFixed(chartAsset==='BTC'?0:3)}`,22,canvas.height-14); ctx.fillText(`Low $${min.toFixed(chartAsset==='BTC'?0:3)}`,130,canvas.height-14);
+    }
+    function map(p,min,max,height,pad){ if(max===min)return height/2; return height-pad-((p-min)/(max-min))*(height-pad*2); }
 
     start();
   </script>
