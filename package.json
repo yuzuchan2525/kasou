@@ -1,0 +1,12 @@
+{
+  "name": "hashrise-market-ticker",
+  "version": "1.0.0",
+  "private": true,
+  "type": "commonjs",
+  "scripts": {
+    "tick": "node scripts/tick-market.js"
+  },
+  "dependencies": {
+    "firebase-admin": "^13.4.0"
+  }
+}
