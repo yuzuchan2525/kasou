@@ -140,6 +140,19 @@
     <div class="card"><div class="label">維持費 残り回数</div><div class="value small"><span id="maintRounds">-</span> 回分</div></div>
   </div>
 
+  <!-- LUMA トークノミクス -->
+  <p style="margin:18px 0 8px;font-size:13px;color:#64748b;font-weight:600;letter-spacing:.05em;">🔷 LUMA トークノミクス</p>
+  <div class="grid" style="grid-template-columns:repeat(4,1fr);margin-bottom:0;">
+    <div class="card"><div class="label">時価総額</div><div class="value small">$<span id="lumaMarketCap">-</span></div></div>
+    <div class="card"><div class="label">流通枚数</div><div class="value small"><span id="lumaCircSupply">-</span> LUMA</div></div>
+    <div class="card"><div class="label">最大発行枚数</div><div class="value small"><span id="lumaMaxSupply">-</span> LUMA</div></div>
+    <div class="card"><div class="label">バーン済み</div><div class="value small"><span id="lumaBurned">-</span> LUMA</div></div>
+    <div class="card"><div class="label">インフレ率(24h)</div><div class="value small"><span id="lumaInflation">-</span>%</div></div>
+    <div class="card"><div class="label">次の半減期まで</div><div class="value small"><span id="lumaHalvingLeft">-</span> tick</div></div>
+    <div class="card"><div class="label">出来高24h (Bot)</div><div class="value small">$<span id="lumaVol24h">-</span></div></div>
+    <div class="card"><div class="label">買圧/売圧</div><div class="value small"><span id="mktPressure">-</span></div></div>
+  </div>
+
   <!-- チャート + ランキング + チャット -->
   <div class="layout">
     <div class="card">
@@ -368,6 +381,22 @@
     const ev = gameData.lastEvent;
     document.getElementById("lastEvent").textContent =
       ev && typeof ev === "object" ? (ev.headline ?? "通常相場。") : (ev ?? "通常相場。");
+
+    // LUMA トークノミクス
+    function setEl(id, val) { const e = document.getElementById(id); if (e) e.textContent = val; }
+    const fmt0 = n => Number(n ?? 0).toLocaleString(undefined, { maximumFractionDigits: 0 });
+    const fmt2 = n => Number(n ?? 0).toLocaleString(undefined, { maximumFractionDigits: 2 });
+    setEl("lumaMarketCap",    money(gameData.lumaMarketCap ?? 0));
+    setEl("lumaCircSupply",   fmt0(gameData.lumaCirculatingSupply));
+    setEl("lumaMaxSupply",    fmt0(gameData.lumaMaxSupply ?? 21_000_000));
+    setEl("lumaBurned",       fmt2(gameData.lumaBurnedSupply));
+    setEl("lumaInflation",    Number(gameData.lumaInflationRate ?? 0).toFixed(4));
+    setEl("lumaHalvingLeft",  fmt0(gameData.lumaTicksUntilHalving ?? 1440));
+    setEl("lumaVol24h",       money(gameData.lumaVolume24h ?? 0));
+    const bp = (Number(gameData.botBuyPressure  ?? 0.5) * 100).toFixed(1);
+    const sp = (Number(gameData.botSellPressure ?? 0.5) * 100).toFixed(1);
+    setEl("mktPressure", `🟢${bp}% / 🔴${sp}%`);
+
     updateUserUI();
     drawChart();
   }
