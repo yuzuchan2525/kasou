@@ -20,6 +20,7 @@
     button { border: 0; border-radius: 12px; padding: 12px 16px; background: #2563eb; color: white; font-weight: bold; cursor: pointer; margin: 6px; }
     button:hover { filter: brightness(1.15); }
     .sell { background: #7c3aed; }
+    .sell-all { background: #9d174d; }
     .upgrade { background: #16a34a; }
     table { width: 100%; border-collapse: collapse; font-size: 14px; }
     td, th { padding: 8px; border-bottom: 1px solid rgba(148,163,184,.18); text-align: left; }
@@ -45,6 +46,10 @@
       <div class="card"><div class="label">効率</div><div class="value">x<span id="miningBoost">-</span></div></div>
       <div class="card"><div class="label">最新採掘</div><div class="value small"><span id="lastMined">-</span> BTC</div></div>
       <div class="card"><div class="label">最新ニュース</div><div class="value small" id="lastEvent">-</div></div>
+      <!-- [追加] 維持費/分 -->
+      <div class="card"><div class="label">維持費 / 分</div><div class="value small">$<span id="maintenanceCost">-</span></div></div>
+      <!-- [追加] 次のTH価格 -->
+      <div class="card"><div class="label">次のTH価格</div><div class="value small">$<span id="nextThPrice">-</span></div></div>
     </div>
 
     <div class="layout">
@@ -67,8 +72,12 @@
     <div class="card" style="margin-top:14px">
       <button onclick="buyBTC()">BTC購入</button>
       <button class="sell" onclick="sellBTC()">BTC売却</button>
+      <!-- [追加] BTC全額売却 -->
+      <button class="sell-all" onclick="sellBTCAll()">BTC全額売却</button>
       <button onclick="buyLUMA()">LUMA購入</button>
       <button class="sell" onclick="sellLUMA()">LUMA売却</button>
+      <!-- [追加] LUMA全額売却 -->
+      <button class="sell-all" onclick="sellLUMAAll()">LUMA全額売却</button>
       <button class="upgrade" onclick="buyTH()">採掘力+1TH</button>
       <button class="upgrade" onclick="upgradeBoost()">LUMAで効率強化</button>
     </div>
@@ -122,6 +131,15 @@
       document.getElementById("lastMined").textContent = Number(userData.lastMinedBTC ?? 0).toFixed(8);
       document.getElementById("miningStatus").textContent = userData.miningActive === false ? "停止中 / 維持費不足" : "稼働中";
       document.getElementById("totalValue").textContent = money(getTotalValue());
+
+      // [追加] 維持費/分 = th * 0.015 USD
+      const th = Number(userData.th ?? 1);
+      const maintenance = th * 0.015;
+      document.getElementById("maintenanceCost").textContent = maintenance.toFixed(4);
+
+      // [追加] 次のTH価格 (userData.thPrice があればそれ、なければ14)
+      const nextThPrice = Number(userData.thPrice ?? 14);
+      document.getElementById("nextThPrice").textContent = nextThPrice.toFixed(2);
     }
 
     function updateRankingUI() {
@@ -165,6 +183,10 @@
     window.sellBTC = async () => tradeSell("btc", "BTC", gameData.btcPrice, 8);
     window.sellLUMA = async () => tradeSell("luma", "LUMA", gameData.lumaPrice, 2);
 
+    // [追加] 全額売却ボタン
+    window.sellBTCAll = async () => tradeSellAll("btc", "BTC", gameData.btcPrice, 8);
+    window.sellLUMAAll = async () => tradeSellAll("luma", "LUMA", gameData.lumaPrice, 2);
+
     async function tradeBuy(key, label, price) {
       if (!uid || !userData || !gameData) return;
       const amount = Number(prompt(`何ドル分${label}を購入しますか？`));
@@ -174,14 +196,31 @@
       status(`$${amount.toFixed(2)}分の${label}を購入しました。`);
     }
 
+    // [変更] all/max/全部/全額 の入力で全額売却に対応
     async function tradeSell(key, label, price, digits) {
       if (!uid || !userData || !gameData) return;
-      const amount = Number(prompt(`何${label}売却しますか？`));
-      if (!amount || amount <= 0) return;
+      const input = prompt(`何${label}売却しますか？\n（"全額" "all" "max" と入力すると全額売却）`);
+      if (input === null || input.trim() === "") return;
+      const allKeywords = ["all", "max", "全部", "全額"];
+      const isAll = allKeywords.includes(input.trim().toLowerCase());
+      const amount = isAll ? Number(userData[key] ?? 0) : Number(input);
+      if (!isAll && (!amount || amount <= 0)) return;
       if (Number(userData[key] ?? 0) < amount) return status(`${label}が足りません。`);
+      if (amount <= 0) return status(`売却できる${label}がありません。`);
       const gain = amount * price * 0.995;
       await updateUser({ usd: Number(userData.usd) + gain, [key]: Number(userData[key]) - amount });
       status(`${amount.toFixed(digits)} ${label}を売却して $${gain.toFixed(2)} 獲得。`);
+    }
+
+    // [追加] 全額売却（確認なしで即実行）
+    async function tradeSellAll(key, label, price, digits) {
+      if (!uid || !userData || !gameData) return;
+      const amount = Number(userData[key] ?? 0);
+      if (amount <= 0) return status(`売却できる${label}がありません。`);
+      if (!confirm(`${amount.toFixed(digits)} ${label} を全額売却しますか？（手数料0.5%）`)) return;
+      const gain = amount * price * 0.995;
+      await updateUser({ usd: Number(userData.usd) + gain, [key]: 0 });
+      status(`${amount.toFixed(digits)} ${label}を全額売却して $${gain.toFixed(2)} 獲得。`);
     }
 
     window.buyTH = async function () {
