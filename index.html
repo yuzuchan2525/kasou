@@ -10,21 +10,35 @@
     h1 { margin-bottom: 4px; }
     .sub { color: #94a3b8; margin-top: 0; }
 
-    /* ステータスカード */
+    /* カード */
     .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin: 20px 0; }
     .card { background: rgba(30,41,59,0.9); border: 1px solid rgba(148,163,184,.18); border-radius: 18px; padding: 18px; box-shadow: 0 10px 25px rgba(0,0,0,.25); }
     .label { color: #94a3b8; font-size: 13px; }
     .value { font-size: 22px; font-weight: 800; margin-top: 6px; }
     .small { font-size: 14px; word-break: break-all; }
 
-    /* 採掘停止中ハイライト */
+    /* 採掘停止ハイライト */
     .mining-stopped { background: rgba(80,10,10,0.92) !important; border-color: rgba(239,68,68,.55) !important; }
     .mining-stopped .label { color: #fca5a5; }
     .mining-stopped .value { color: #f87171; }
 
-    /* チャート・ランキング */
+    /* レイアウト */
     .layout { display: grid; grid-template-columns: 2fr 1fr; gap: 14px; margin-bottom: 14px; }
-    canvas { width: 100%; height: 330px; background: #020617; border-radius: 16px; display: block; }
+    .layout3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; margin-bottom: 14px; }
+
+    /* チャート */
+    .chart-wrap { position: relative; }
+    canvas { width: 100%; height: 330px; background: #020617; border-radius: 16px; display: block; cursor: crosshair; }
+    .chart-foot { font-size: 12px; color: #475569; margin-top: 6px; padding-left: 4px; }
+    .chart-tooltip {
+      position: absolute; pointer-events: none; display: none;
+      background: rgba(15,23,42,.95); border: 1px solid rgba(148,163,184,.3);
+      border-radius: 10px; padding: 10px 14px; font-size: 12px; font-family: monospace;
+      color: #e2e8f0; white-space: nowrap; z-index: 10; box-shadow: 0 4px 16px rgba(0,0,0,.4);
+      line-height: 1.8;
+    }
+
+    /* テーブル */
     table { width: 100%; border-collapse: collapse; font-size: 14px; }
     td, th { padding: 8px; border-bottom: 1px solid rgba(148,163,184,.18); text-align: left; }
     th { color: #94a3b8; font-weight: 600; }
@@ -32,14 +46,15 @@
     /* 取引パネル */
     .trade-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px; }
     .trade-box h3 { margin: 0 0 14px; font-size: 15px; }
-    .trade-box h3 .price-tag { font-size: 12px; color: #94a3b8; font-weight: 400; margin-left: 6px; }
+    .price-tag { font-size: 12px; color: #94a3b8; font-weight: 400; margin-left: 6px; }
     .field-label { font-size: 12px; color: #94a3b8; margin-bottom: 5px; }
     .input-row { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; }
-    .tx-input {
+    .tx-input, .sel-input {
       flex: 1; background: #0f172a; border: 1px solid rgba(148,163,184,.28);
       border-radius: 10px; padding: 9px 12px; color: white; font-size: 14px; outline: none; width: 0;
     }
-    .tx-input:focus { border-color: #3b82f6; }
+    .tx-input:focus, .sel-input:focus { border-color: #3b82f6; }
+    .sel-input { cursor: pointer; }
     .pct-row { display: flex; gap: 6px; margin-bottom: 10px; }
     .pct-btn {
       flex: 1; border: 1px solid rgba(100,150,255,.3); border-radius: 8px; padding: 5px 0;
@@ -52,32 +67,50 @@
     /* ボタン */
     .btn { border: 0; border-radius: 10px; padding: 9px 16px; font-weight: 700; cursor: pointer; font-size: 13px; color: white; }
     .btn:hover { filter: brightness(1.18); }
-    .btn-buy      { background: #2563eb; }
-    .btn-sell     { background: #7c3aed; }
-    .btn-sell-all { background: #9d174d; }
-    .btn-upgrade  { background: #16a34a; }
-    .btn-chart    { background: #1e3a5f; padding: 8px 14px; margin: 6px 4px 0; border-radius: 10px; }
+    .btn-buy       { background: #2563eb; }
+    .btn-sell      { background: #7c3aed; }
+    .btn-sell-all  { background: #9d174d; }
+    .btn-upgrade   { background: #16a34a; }
+    .btn-chart     { background: #1e3a5f; padding: 8px 14px; margin: 8px 4px 0; }
+    .btn-transfer  { background: #0e7490; }
+    .btn-chat      { background: #374151; }
 
-    /* 採掘・強化 */
-    .mine-card .btn-row { margin-top: 10px; }
+    /* 送金 */
+    .transfer-form { display: flex; flex-direction: column; gap: 10px; }
+
+    /* チャット */
+    .chat-msgs {
+      height: 220px; overflow-y: auto; background: #0f172a; border-radius: 12px;
+      padding: 10px; margin-bottom: 10px; display: flex; flex-direction: column; gap: 6px;
+    }
+    .chat-msg { font-size: 13px; line-height: 1.5; word-break: break-all; }
+    .chat-msg .msg-name { font-weight: 700; color: #60a5fa; margin-right: 6px; }
+    .chat-msg .msg-time { font-size: 11px; color: #475569; margin-left: 6px; }
+    .chat-msg.mine .msg-name { color: #34d399; }
+    .chat-input-row { display: flex; gap: 8px; }
+    .chat-input {
+      flex: 1; background: #0f172a; border: 1px solid rgba(148,163,184,.28);
+      border-radius: 10px; padding: 9px 12px; color: white; font-size: 14px; outline: none;
+    }
+    .chat-input:focus { border-color: #3b82f6; }
+    .chat-empty { color: #475569; font-size: 13px; font-family: monospace; padding: 6px 0; }
 
     /* 取引ログ */
-    .log-card strong { display: block; margin-bottom: 10px; }
-    .log-list { list-style: none; margin: 0; padding: 0; max-height: 160px; overflow-y: auto; }
-    .log-list li { font-size: 12px; padding: 5px 0; border-bottom: 1px solid rgba(148,163,184,.1); font-family: monospace; color: #cbd5e1; }
+    .log-list { list-style: none; margin: 0; padding: 0; max-height: 150px; overflow-y: auto; }
+    .log-list li { font-size: 12px; padding: 4px 0; border-bottom: 1px solid rgba(148,163,184,.1); font-family: monospace; color: #cbd5e1; }
     .log-list li:last-child { border-bottom: 0; }
-    .log-buy  { color: #60a5fa !important; }
-    .log-sell { color: #c084fc !important; }
-    .log-mine { color: #34d399 !important; }
-    .log-err  { color: #f87171 !important; }
-    .log-empty { color: #475569; font-size: 13px; font-family: monospace; padding: 6px 0; }
+    .log-buy      { color: #60a5fa !important; }
+    .log-sell     { color: #c084fc !important; }
+    .log-mine     { color: #34d399 !important; }
+    .log-transfer { color: #f59e0b !important; }
+    .log-err      { color: #f87171 !important; }
+    .log-empty    { color: #475569; font-size: 13px; font-family: monospace; padding: 6px 0; }
 
-    /* ステータスバー */
     .status-bar { padding: 11px 16px; background: #020617; border-radius: 14px; color: #cbd5e1; margin-top: 14px; font-size: 13px; }
 
     @media(max-width:860px) {
       .grid { grid-template-columns: 1fr 1fr; }
-      .layout, .trade-grid { grid-template-columns: 1fr; }
+      .layout, .trade-grid, .layout3 { grid-template-columns: 1fr; }
     }
   </style>
 </head>
@@ -96,8 +129,7 @@
     <div class="card"><div class="label">BTC</div><div class="value small"><span id="btc">-</span></div></div>
     <div class="card"><div class="label">LUMA</div><div class="value"><span id="luma">-</span></div></div>
     <div class="card" id="miningStatusCard">
-      <div class="label">採掘状態</div>
-      <div class="value small" id="miningStatus">-</div>
+      <div class="label">採掘状態</div><div class="value small" id="miningStatus">-</div>
     </div>
     <div class="card"><div class="label">採掘力</div><div class="value"><span id="th">-</span> TH/s</div></div>
     <div class="card"><div class="label">効率</div><div class="value">x<span id="miningBoost">-</span></div></div>
@@ -108,31 +140,49 @@
     <div class="card"><div class="label">維持費 残り回数</div><div class="value small"><span id="maintRounds">-</span> 回分</div></div>
   </div>
 
-  <!-- チャート + ランキング -->
+  <!-- チャート + ランキング + チャット -->
   <div class="layout">
     <div class="card">
-      <canvas id="chart" width="780" height="330"></canvas>
+      <div class="chart-wrap">
+        <canvas id="chart" width="780" height="330"></canvas>
+        <div class="chart-tooltip" id="chartTooltip"></div>
+      </div>
+      <div class="chart-foot">📊 1分足チャート</div>
       <div>
         <button class="btn btn-chart" onclick="setChart('BTC')">BTCチャート</button>
         <button class="btn btn-chart" onclick="setChart('LUMA')">LUMAチャート</button>
       </div>
     </div>
-    <div class="card">
-      <h2 style="margin:0 0 12px">ランキング</h2>
-      <table>
-        <thead><tr><th>#</th><th>名前</th><th>総資産</th></tr></thead>
-        <tbody id="rankingBody"><tr><td colspan="3">読み込み中...</td></tr></tbody>
-      </table>
+
+    <!-- ランキング + チャット縦並び -->
+    <div style="display:flex;flex-direction:column;gap:14px;">
+      <div class="card">
+        <h2 style="margin:0 0 10px">ランキング</h2>
+        <table>
+          <thead><tr><th>#</th><th>名前</th><th>総資産</th></tr></thead>
+          <tbody id="rankingBody"><tr><td colspan="3">読み込み中...</td></tr></tbody>
+        </table>
+      </div>
+
+      <!-- グローバルチャット -->
+      <div class="card">
+        <h3 style="margin:0 0 10px;font-size:14px;">💬 グローバルチャット</h3>
+        <div class="chat-msgs" id="chatMsgs">
+          <div class="chat-empty">チャットを読み込み中...</div>
+        </div>
+        <div class="chat-input-row">
+          <input class="chat-input" id="chatInput" type="text" maxlength="120" placeholder="メッセージを入力 (最大120文字)">
+          <button class="btn btn-chat" onclick="sendChat()">送信</button>
+        </div>
+      </div>
     </div>
   </div>
 
   <!-- 取引パネル -->
   <div class="trade-grid">
-
     <!-- BTC -->
     <div class="card trade-box">
       <h3>BTC 取引 <span class="price-tag" id="btcPriceTag"></span></h3>
-
       <div class="field-label">購入額（USD）</div>
       <div class="input-row">
         <input class="tx-input" id="btcBuyInput" type="number" min="0" step="any" placeholder="例: 100">
@@ -142,12 +192,8 @@
         <button class="pct-btn" onclick="setPct('btcBuyInput','usd',50)">50%</button>
         <button class="pct-btn" onclick="setPct('btcBuyInput','usd',100)">100%</button>
       </div>
-      <div class="btn-row">
-        <button class="btn btn-buy" onclick="buyBTC()">BTC購入</button>
-      </div>
-
+      <div class="btn-row"><button class="btn btn-buy" onclick="buyBTC()">BTC購入</button></div>
       <hr class="divider">
-
       <div class="field-label">売却数量（BTC）</div>
       <div class="input-row">
         <input class="tx-input" id="btcSellInput" type="number" min="0" step="any" placeholder="例: 0.001">
@@ -166,7 +212,6 @@
     <!-- LUMA -->
     <div class="card trade-box">
       <h3>LUMA 取引 <span class="price-tag" id="lumaPriceTag"></span></h3>
-
       <div class="field-label">購入額（USD）</div>
       <div class="input-row">
         <input class="tx-input" id="lumaBuyInput" type="number" min="0" step="any" placeholder="例: 50">
@@ -176,12 +221,8 @@
         <button class="pct-btn" onclick="setPct('lumaBuyInput','usd',50)">50%</button>
         <button class="pct-btn" onclick="setPct('lumaBuyInput','usd',100)">100%</button>
       </div>
-      <div class="btn-row">
-        <button class="btn btn-buy" onclick="buyLUMA()">LUMA購入</button>
-      </div>
-
+      <div class="btn-row"><button class="btn btn-buy" onclick="buyLUMA()">LUMA購入</button></div>
       <hr class="divider">
-
       <div class="field-label">売却数量（LUMA）</div>
       <div class="input-row">
         <input class="tx-input" id="lumaSellInput" type="number" min="0" step="any" placeholder="例: 100">
@@ -198,19 +239,50 @@
     </div>
   </div>
 
-  <!-- 採掘・強化 -->
-  <div class="card mine-card">
-    <strong>採掘 &amp; 強化</strong>
-    <div class="btn-row">
-      <button class="btn btn-upgrade" onclick="buyTH()">採掘力 +1TH</button>
-      <button class="btn btn-upgrade" onclick="upgradeBoost()">LUMAで効率強化（50 LUMA）</button>
+  <!-- 採掘 + 送金 -->
+  <div class="trade-grid">
+    <!-- 採掘・強化 -->
+    <div class="card">
+      <strong>採掘 &amp; 強化</strong>
+      <div class="btn-row" style="margin-top:12px;">
+        <button class="btn btn-upgrade" onclick="buyTH()">採掘力 +1TH</button>
+        <button class="btn btn-upgrade" onclick="upgradeBoost()">LUMAで効率強化（50 LUMA）</button>
+      </div>
+    </div>
+
+    <!-- 送金 -->
+    <div class="card">
+      <strong>💸 送金</strong>
+      <div class="transfer-form" style="margin-top:12px;">
+        <div>
+          <div class="field-label">送金先（UID or 表示名）</div>
+          <input class="tx-input" id="tfRecipient" type="text" placeholder="UID または Player xxxx" style="width:100%">
+        </div>
+        <div style="display:flex;gap:8px;">
+          <div style="flex:1;">
+            <div class="field-label">資産</div>
+            <select class="sel-input" id="tfAsset" style="width:100%">
+              <option value="usd">USD</option>
+              <option value="btc">BTC</option>
+              <option value="luma">LUMA</option>
+            </select>
+          </div>
+          <div style="flex:2;">
+            <div class="field-label">数量</div>
+            <input class="tx-input" id="tfAmount" type="number" min="0" step="any" placeholder="0" style="width:100%">
+          </div>
+        </div>
+        <div class="btn-row">
+          <button class="btn btn-transfer" onclick="doTransfer()">送金する</button>
+        </div>
+      </div>
     </div>
   </div>
 
   <!-- 取引ログ -->
-  <div class="card" style="margin-top:14px">
-    <strong>取引ログ（直近30件）</strong>
-    <ul class="log-list" id="txLog">
+  <div class="card" style="margin-bottom:14px;">
+    <strong>📋 取引ログ（直近30件）</strong>
+    <ul class="log-list" id="txLog" style="margin-top:10px;">
       <li class="log-empty">まだ取引履歴がありません</li>
     </ul>
   </div>
@@ -219,11 +291,14 @@
 </div>
 
 <script type="module">
-  import { initializeApp }     from "https://www.gstatic.com/firebasejs/12.14.0/firebase-app.js";
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-app.js";
   import { getAuth, signInAnonymously, onAuthStateChanged }
     from "https://www.gstatic.com/firebasejs/12.14.0/firebase-auth.js";
-  import { getFirestore, doc, getDoc, setDoc, updateDoc, onSnapshot }
-    from "https://www.gstatic.com/firebasejs/12.14.0/firebase-firestore.js";
+  import {
+    getFirestore, doc, getDoc, setDoc, updateDoc, onSnapshot,
+    collection, addDoc, query, orderBy, limit,
+    runTransaction, serverTimestamp, getDocs, where
+  } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-firestore.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyCYiKr4fC_BLFotJluoRB_ScoVja7odLPQ",
@@ -240,20 +315,32 @@
   const db   = getFirestore(app);
 
   let uid = null, userData = null, gameData = null, rankingData = null;
+  let displayName = "";
   let chartAsset = "BTC";
+  let lastChatAt = 0;
+
+  // チャートカーソル用
+  let candleScreenData = [];
+  let chartCanvasStep  = 0;
 
   // ─── ユーティリティ ───────────────────────────────────────────
   const statusEl = document.getElementById("statusBar");
   function setStatus(text) { statusEl.textContent = text; }
   function money(n, d = 2) { return Number(n ?? 0).toLocaleString(undefined, { maximumFractionDigits: d }); }
-  function formatTime(val) {
+  function fmtTime(val) {
     if (!val) return "未更新";
+    const d = typeof val === "object" && val.toDate ? val.toDate() : new Date(val);
+    return isNaN(d) ? String(val) : d.toLocaleString("ja-JP", { month:"2-digit", day:"2-digit", hour:"2-digit", minute:"2-digit" });
+  }
+  function fmtHM(val) {
+    if (!val) return "";
     const d = new Date(val);
-    return isNaN(d) ? "未更新" : d.toLocaleString("ja-JP", { month:"2-digit", day:"2-digit", hour:"2-digit", minute:"2-digit" });
+    if (isNaN(d)) return "";
+    return d.toLocaleTimeString("ja-JP", { hour:"2-digit", minute:"2-digit" });
   }
   function getTotalValue() {
     if (!userData || !gameData) return 0;
-    return Number(userData.usd ?? 0)
+    return Number(userData.usd  ?? 0)
          + Number(userData.btc  ?? 0) * Number(gameData.btcPrice  ?? 0)
          + Number(userData.luma ?? 0) * Number(gameData.lumaPrice ?? 0);
   }
@@ -273,42 +360,38 @@
   // ─── UI 更新 ──────────────────────────────────────────────────
   function updateGameUI() {
     if (!gameData) return;
-    document.getElementById("marketTime").textContent = formatTime(gameData.lastTickAt);
-    document.getElementById("btcPrice").textContent   = money(gameData.btcPrice);
-    document.getElementById("lumaPrice").textContent  = Number(gameData.lumaPrice ?? 0).toFixed(4);
+    document.getElementById("marketTime").textContent  = fmtTime(gameData.lastTickAt);
+    document.getElementById("btcPrice").textContent    = money(gameData.btcPrice);
+    document.getElementById("lumaPrice").textContent   = Number(gameData.lumaPrice ?? 0).toFixed(4);
     document.getElementById("btcPriceTag").textContent  = `$${money(gameData.btcPrice)}`;
     document.getElementById("lumaPriceTag").textContent = `$${Number(gameData.lumaPrice ?? 0).toFixed(4)}`;
-
-    // lastEvent はオブジェクト or 文字列
     const ev = gameData.lastEvent;
     document.getElementById("lastEvent").textContent =
       ev && typeof ev === "object" ? (ev.headline ?? "通常相場。") : (ev ?? "通常相場。");
-
     updateUserUI();
     drawChart();
   }
 
   function updateUserUI() {
     if (!userData) return;
-    const usd     = Number(userData.usd   ?? 0);
-    const btc     = Number(userData.btc   ?? 0);
-    const luma    = Number(userData.luma  ?? 0);
-    const th      = Number(userData.th    ?? 1);
-    const boost   = Number(userData.miningBoost ?? 1);
-    const mining  = userData.miningActive !== false;
+    const usd   = Number(userData.usd   ?? 0);
+    const btc   = Number(userData.btc   ?? 0);
+    const luma  = Number(userData.luma  ?? 0);
+    const th    = Number(userData.th    ?? 1);
+    const boost = Number(userData.miningBoost ?? 1);
+    const mine  = userData.miningActive !== false;
 
-    document.getElementById("usd").textContent         = usd.toFixed(2);
-    document.getElementById("btc").textContent         = btc.toFixed(8);
-    document.getElementById("luma").textContent        = luma.toFixed(2);
-    document.getElementById("th").textContent          = th.toFixed(2);
-    document.getElementById("miningBoost").textContent = boost.toFixed(2);
-    document.getElementById("lastMined").textContent   = Number(userData.lastMinedBTC ?? 0).toFixed(8);
-    document.getElementById("totalValue").textContent  = money(getTotalValue());
+    document.getElementById("usd").textContent          = usd.toFixed(2);
+    document.getElementById("btc").textContent          = btc.toFixed(8);
+    document.getElementById("luma").textContent         = luma.toFixed(2);
+    document.getElementById("th").textContent           = th.toFixed(2);
+    document.getElementById("miningBoost").textContent  = boost.toFixed(2);
+    document.getElementById("lastMined").textContent    = Number(userData.lastMinedBTC ?? 0).toFixed(8);
+    document.getElementById("totalValue").textContent   = money(getTotalValue());
 
-    // 採掘状態カード（停止中=赤ハイライト）
     const card = document.getElementById("miningStatusCard");
     const txt  = document.getElementById("miningStatus");
-    if (!mining) {
+    if (!mine) {
       card.classList.add("mining-stopped");
       txt.textContent = "⚠️ 停止中 / 維持費不足";
     } else {
@@ -316,26 +399,16 @@
       txt.textContent = "✅ 稼働中";
     }
 
-    // 維持費 / 分 = th × $0.015
     const maint = th * 0.015;
     document.getElementById("maintenanceCost").textContent = maint.toFixed(4);
-
-    // 次のTH価格
-    const nextTh = Number(userData.thPrice ?? 14);
-    document.getElementById("nextThPrice").textContent = nextTh.toFixed(2);
-
-    // 維持費 残り回数 = floor(usd / maint)
-    document.getElementById("maintRounds").textContent =
-      maint > 0 ? Math.floor(usd / maint).toLocaleString() : "∞";
+    document.getElementById("nextThPrice").textContent     = Number(userData.thPrice ?? 14).toFixed(2);
+    document.getElementById("maintRounds").textContent     = maint > 0 ? Math.floor(usd / maint).toLocaleString() : "∞";
   }
 
   function updateRankingUI() {
     const body    = document.getElementById("rankingBody");
     const players = rankingData?.players ?? [];
-    if (!players.length) {
-      body.innerHTML = '<tr><td colspan="3">まだランキングなし</td></tr>';
-      return;
-    }
+    if (!players.length) { body.innerHTML = '<tr><td colspan="3">まだランキングなし</td></tr>'; return; }
     body.innerHTML = players.map((p, i) =>
       `<tr><td>${i+1}</td><td>${p.name}</td><td>$${money(p.totalValue)}</td></tr>`
     ).join("");
@@ -344,50 +417,169 @@
   // ─── Firebase ─────────────────────────────────────────────────
   async function createUserIfNeeded(user) {
     uid = user.uid;
+    displayName = "Player " + uid.slice(0, 4).toUpperCase();
     const userRef = doc(db, "users", uid);
     const snap = await getDoc(userRef);
     if (!snap.exists()) {
-      await setDoc(userRef, { usd:100, btc:0, luma:0, th:1, thPrice:14, miningBoost:1, miningActive:true, createdAt:Date.now() });
+      await setDoc(userRef, { usd:100, btc:0, luma:0, th:1, thPrice:14, miningBoost:1, miningActive:true, name:displayName, createdAt:Date.now() });
       setStatus("新規ユーザーを作成しました。");
     } else {
+      const d = snap.data();
+      if (d.name) displayName = d.name;
       setStatus("既存ユーザーでログインしました。");
     }
-    onSnapshot(userRef, snap => { userData = snap.data(); updateUserUI(); });
+    onSnapshot(userRef, s => { userData = s.data(); updateUserUI(); });
   }
 
   function listenGameState() {
-    onSnapshot(doc(db, "game", "state"), snap => {
-      if (!snap.exists()) return setStatus("game/state が存在しません。");
-      gameData = snap.data();
-      updateGameUI();
-      setStatus("Firestoreとリアルタイム同期中。");
+    onSnapshot(doc(db, "game", "state"), s => {
+      if (!s.exists()) return setStatus("game/state が存在しません。");
+      gameData = s.data(); updateGameUI(); setStatus("Firestoreとリアルタイム同期中。");
     });
-    onSnapshot(doc(db, "game", "ranking"), snap => {
-      rankingData = snap.exists() ? snap.data() : { players: [] };
+    onSnapshot(doc(db, "game", "ranking"), s => {
+      rankingData = s.exists() ? s.data() : { players: [] };
       updateRankingUI();
     });
   }
 
+  // ─── グローバルチャット ────────────────────────────────────────
+  function listenChat() {
+    const q = query(
+      collection(db, "game", "chat", "messages"),
+      orderBy("createdAt", "desc"),
+      limit(50)
+    );
+    onSnapshot(q, snap => {
+      const msgs = [];
+      snap.forEach(d => msgs.push({ id: d.id, ...d.data() }));
+      msgs.reverse();
+      renderChat(msgs);
+    });
+  }
+
+  function renderChat(msgs) {
+    const box = document.getElementById("chatMsgs");
+    if (!msgs.length) { box.innerHTML = '<div class="chat-empty">まだメッセージがありません</div>'; return; }
+    box.innerHTML = msgs.map(m => {
+      const isMine = m.uid === uid;
+      const t = m.createdAt?.toDate ? m.createdAt.toDate() : new Date(m.createdAt ?? 0);
+      const tStr = isNaN(t) ? "" : t.toLocaleTimeString("ja-JP", { hour:"2-digit", minute:"2-digit" });
+      return `<div class="chat-msg${isMine ? " mine" : ""}">
+        <span class="msg-name">${esc(m.name ?? "？")}</span>
+        <span>${esc(m.text)}</span>
+        <span class="msg-time">${tStr}</span>
+      </div>`;
+    }).join("");
+    box.scrollTop = box.scrollHeight;
+  }
+
+  function esc(s) {
+    return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+  }
+
+  window.sendChat = async function() {
+    if (!uid) return;
+    const input = document.getElementById("chatInput");
+    const text  = input.value.trim();
+    if (!text)          { setStatus("メッセージを入力してください。"); return; }
+    if (text.length > 120) { setStatus("120文字以内で入力してください。"); return; }
+    const now = Date.now();
+    if (now - lastChatAt < 3000) { setStatus("連投防止: 3秒待ってください。"); return; }
+    lastChatAt = now;
+    input.value = "";
+    await addDoc(collection(db, "game", "chat", "messages"), {
+      uid, name: displayName, text, createdAt: serverTimestamp()
+    });
+  };
+
+  document.getElementById("chatInput").addEventListener("keydown", e => {
+    if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); window.sendChat(); }
+  });
+
+  // ─── 送金 ─────────────────────────────────────────────────────
+  window.doTransfer = async function() {
+    if (!uid || !userData) return;
+    const recipientInput = document.getElementById("tfRecipient").value.trim();
+    const asset  = document.getElementById("tfAsset").value;
+    const amount = Number(document.getElementById("tfAmount").value);
+
+    if (!recipientInput) { setStatus("送金先を入力してください。"); return; }
+    if (!amount || amount <= 0) { setStatus("送金数量を入力してください。"); return; }
+
+    // 残高チェック
+    const myBal = Number(userData[asset] ?? 0);
+    if (myBal < amount) { setStatus(`残高不足: ${asset.toUpperCase()} が足りません。`); addLog("err", `送金失敗: 残高不足`); return; }
+
+    // 送金先UID解決
+    let recipientUid = null;
+    // まずランキングから表示名で探す
+    const players = rankingData?.players ?? [];
+    const found = players.find(p => p.name === recipientInput || p.uid === recipientInput);
+    if (found) {
+      recipientUid = found.uid;
+    } else {
+      // 直接UIDとして試みる
+      const rSnap = await getDoc(doc(db, "users", recipientInput));
+      if (rSnap.exists()) recipientUid = recipientInput;
+    }
+
+    if (!recipientUid) { setStatus("送金先が見つかりません。UID or 正確な表示名を入力してください。"); addLog("err", `送金失敗: 相手不明`); return; }
+    if (recipientUid === uid) { setStatus("自分自身には送金できません。"); return; }
+
+    try {
+      const senderRef    = doc(db, "users", uid);
+      const recipientRef = doc(db, "users", recipientUid);
+
+      await runTransaction(db, async tx => {
+        const sSnap = await tx.get(senderRef);
+        const rSnap = await tx.get(recipientRef);
+        if (!sSnap.exists() || !rSnap.exists()) throw new Error("ユーザーが見つかりません");
+
+        const sBal = Number(sSnap.data()[asset] ?? 0);
+        if (sBal < amount) throw new Error("残高不足");
+
+        const rBal = Number(rSnap.data()[asset] ?? 0);
+        tx.update(senderRef,    { [asset]: sBal - amount });
+        tx.update(recipientRef, { [asset]: rBal + amount });
+      });
+
+      // 送金履歴を保存
+      const histData = { to: recipientUid, toName: found?.name ?? recipientUid, asset, amount, createdAt: serverTimestamp() };
+      await addDoc(collection(db, "users", uid, "transfers"), histData);
+
+      document.getElementById("tfAmount").value = "";
+      const msg = `SEND ${asset.toUpperCase()}: ${amount} → ${found?.name ?? recipientUid}`;
+      setStatus(msg); addLog("transfer", msg);
+    } catch(e) {
+      setStatus("送金エラー: " + e.message);
+      addLog("err", "送金エラー: " + e.message);
+    }
+  };
+
+  // ─── Firebase 起動 ────────────────────────────────────────────
   async function start() {
     setStatus("匿名ログイン中...");
     await signInAnonymously(auth);
     onAuthStateChanged(auth, async user => {
-      if (user) { await createUserIfNeeded(user); listenGameState(); }
+      if (user) {
+        await createUserIfNeeded(user);
+        listenGameState();
+        listenChat();
+      }
     });
   }
 
   async function updateUser(fields) { await updateDoc(doc(db, "users", uid), fields); }
 
-  // ─── 25/50/100% ボタン ────────────────────────────────────────
+  // ─── 25/50/100% ──────────────────────────────────────────────
   window.setPct = function(inputId, balKey, pct) {
     if (!userData) return;
     const bal = Number(userData[balKey] ?? 0);
-    const val = bal * pct / 100;
     document.getElementById(inputId).value =
-      balKey === "btc" ? val.toFixed(8) : val.toFixed(2);
+      balKey === "btc" ? (bal * pct / 100).toFixed(8) : (bal * pct / 100).toFixed(2);
   };
 
-  // ─── 取引ロジック ─────────────────────────────────────────────
+  // ─── 取引 ─────────────────────────────────────────────────────
   async function tradeBuy(inputId, key, label, price) {
     if (!uid || !userData || !gameData) return;
     const amount = Number(document.getElementById(inputId).value);
@@ -408,7 +600,7 @@
     const gain = amount * price * 0.995;
     await updateUser({ usd: Number(userData.usd) + gain, [key]: Number(userData[key]) - amount });
     document.getElementById(inputId).value = "";
-    const msg = `SELL ${label}: ${amount.toFixed(digits)} → $${gain.toFixed(2)} (手数料0.5%)`;
+    const msg = `SELL ${label}: ${amount.toFixed(digits)} → $${gain.toFixed(2)}`;
     setStatus(msg); addLog("sell", msg);
   }
 
@@ -418,7 +610,7 @@
     if (amount <= 0) { setStatus(`売却できる${label}がありません。`); return; }
     const gain = amount * price * 0.995;
     await updateUser({ usd: Number(userData.usd) + gain, [key]: 0 });
-    const msg = `SELL ALL ${label}: ${amount.toFixed(digits)} → $${gain.toFixed(2)} (手数料0.5%)`;
+    const msg = `SELL ALL ${label}: ${amount.toFixed(digits)} → $${gain.toFixed(2)}`;
     setStatus(msg); addLog("sell", msg);
   }
 
@@ -429,15 +621,15 @@
   window.sellLUMA    = () => tradeSell("lumaSellInput","luma", "LUMA", gameData.lumaPrice, 2);
   window.sellLUMAAll = () => tradeSellAll("luma", "LUMA", gameData.lumaPrice, 2);
 
-  window.buyTH = async function () {
+  window.buyTH = async function() {
     const price = Number(userData?.thPrice ?? 14);
     if (Number(userData.usd) < price) { setStatus(`採掘力購入には $${price.toFixed(2)} 必要です。`); return; }
     await updateUser({ usd: Number(userData.usd)-price, th: Number(userData.th??1)+1, thPrice: price*1.08, miningActive:true });
-    const msg = `UPGRADE TH: $${price.toFixed(2)} 消費 → +1 TH`;
+    const msg = `UPGRADE TH: $${price.toFixed(2)} → +1 TH`;
     setStatus(msg); addLog("mine", msg);
   };
 
-  window.upgradeBoost = async function () {
+  window.upgradeBoost = async function() {
     if (Number(userData.luma ?? 0) < 50) { setStatus("効率強化には50 LUMA必要です。"); return; }
     const nb = Number(userData.miningBoost ?? 1) * 1.15;
     await updateUser({ luma: Number(userData.luma)-50, miningBoost: nb });
@@ -448,53 +640,138 @@
   // ─── チャート ─────────────────────────────────────────────────
   window.setChart = function(asset) { chartAsset = asset; drawChart(); };
 
+  const canvas     = document.getElementById("chart");
+  const tooltip    = document.getElementById("chartTooltip");
+  const chartWrap  = canvas.parentElement;
+
+  canvas.addEventListener("mousemove", e => {
+    if (!candleScreenData.length) return;
+    const rect  = canvas.getBoundingClientRect();
+    const scaleX = canvas.width / rect.width;
+    const mx     = (e.clientX - rect.left) * scaleX;
+    const found  = candleScreenData.find(d => Math.abs(d.x - mx) < chartCanvasStep / 2);
+    if (found) {
+      const c   = found.candle;
+      const fix = chartAsset === "BTC" ? 2 : 4;
+      const ts  = c.timestamp ? (() => {
+        const d = new Date(c.timestamp);
+        return isNaN(d) ? "" : d.toLocaleString("ja-JP", { month:"2-digit", day:"2-digit", hour:"2-digit", minute:"2-digit", second:"2-digit" });
+      })() : "";
+      tooltip.innerHTML =
+        `<div style="color:#94a3b8;margin-bottom:3px;">${ts}</div>` +
+        `<div>Open&nbsp; <b>${Number(c.open ).toFixed(fix)}</b></div>` +
+        `<div>High&nbsp; <b style="color:#22c55e">${Number(c.high ).toFixed(fix)}</b></div>` +
+        `<div>Low&nbsp;&nbsp; <b style="color:#ef4444">${Number(c.low  ).toFixed(fix)}</b></div>` +
+        `<div>Close <b>${Number(c.close).toFixed(fix)}</b></div>`;
+      // ツールチップ位置（canvas内の相対）
+      const wRect = chartWrap.getBoundingClientRect();
+      let tx = e.clientX - wRect.left + 16;
+      let ty = e.clientY - wRect.top  - 10;
+      tooltip.style.display = "block";
+      // 右端はみ出し補正
+      const tW = tooltip.offsetWidth || 160;
+      if (tx + tW > wRect.width) tx = e.clientX - wRect.left - tW - 16;
+      tooltip.style.left = tx + "px";
+      tooltip.style.top  = ty + "px";
+    } else {
+      tooltip.style.display = "none";
+    }
+  });
+  canvas.addEventListener("mouseleave", () => { tooltip.style.display = "none"; });
+
   function drawChart() {
-    const canvas = document.getElementById("chart");
     const ctx = canvas.getContext("2d");
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.fillStyle = "#020617";
     ctx.fillRect(0, 0, canvas.width, canvas.height);
-    const candles = chartAsset === "BTC"
-      ? (gameData?.btcCandles ?? [])
+
+    // 最新60本に絞る
+    const allCandles = chartAsset === "BTC"
+      ? (gameData?.btcCandles  ?? [])
       : (gameData?.lumaCandles ?? []);
-    ctx.fillStyle = "#fff";
-    ctx.font = "18px system-ui";
-    ctx.fillText(`${chartAsset}/USD ローソク足`, 22, 28);
+    const candles = allCandles.slice(-60);
+
+    // タイトル
+    ctx.fillStyle = "#fff"; ctx.font = "bold 16px system-ui";
+    ctx.fillText(`${chartAsset}/USD`, 22, 28);
+
+    // 最新ローソク足の時刻（右上）
+    if (candles.length) {
+      const last = candles[candles.length - 1];
+      const latestStr = last.timestamp ? fmtHM(last.timestamp) : "";
+      if (latestStr) {
+        ctx.font = "12px system-ui"; ctx.fillStyle = "#94a3b8";
+        const tw = ctx.measureText("最新: " + latestStr).width;
+        ctx.fillText("最新: " + latestStr, canvas.width - tw - 14, 22);
+      }
+    }
+
     if (!candles.length) {
-      ctx.fillStyle = "#94a3b8";
+      ctx.fillStyle = "#94a3b8"; ctx.font = "14px system-ui";
       ctx.fillText("相場更新後にチャートが表示されます", 22, 60);
+      candleScreenData = [];
       return;
     }
+
     const prices = candles.flatMap(c => [c.high, c.low]);
     const max = Math.max(...prices), min = Math.min(...prices);
-    const pad = 42, w = canvas.width - pad*2, h = canvas.height - pad*2;
-    const step = w / candles.length;
-    ctx.strokeStyle = "#1e293b";
-    for (let i = 0; i < 5; i++) {
-      const y = pad + h/4 * i;
-      ctx.beginPath(); ctx.moveTo(pad, y); ctx.lineTo(canvas.width-pad, y); ctx.stroke();
+    const PAD_TOP = 50, PAD_BOTTOM = 45, PAD_LEFT = 58, PAD_RIGHT = 14;
+    const cW = canvas.width  - PAD_LEFT - PAD_RIGHT;
+    const cH = canvas.height - PAD_TOP  - PAD_BOTTOM;
+    const step = cW / candles.length;
+    chartCanvasStep = step;
+
+    // グリッド + Y軸ラベル
+    ctx.strokeStyle = "#1e2d45"; ctx.lineWidth = 1;
+    ctx.font = "11px system-ui"; ctx.fillStyle = "#64748b"; ctx.textAlign = "right";
+    for (let i = 0; i <= 4; i++) {
+      const y    = PAD_TOP + cH / 4 * i;
+      const pVal = max - (max - min) / 4 * i;
+      ctx.beginPath(); ctx.moveTo(PAD_LEFT, y); ctx.lineTo(canvas.width - PAD_RIGHT, y); ctx.stroke();
+      ctx.fillText(pVal.toFixed(chartAsset === "BTC" ? 0 : 3), PAD_LEFT - 4, y + 4);
     }
+    ctx.textAlign = "left";
+
+    // X軸時刻ラベル（間引き）
+    const tickEvery = Math.max(1, Math.floor(candles.length / 8));
+    ctx.font = "10px system-ui"; ctx.fillStyle = "#64748b"; ctx.textAlign = "center";
     candles.forEach((c, i) => {
-      const x  = pad + i * step + step / 2;
-      const yH = mapY(c.high,  min, max, canvas.height, pad);
-      const yL = mapY(c.low,   min, max, canvas.height, pad);
-      const yO = mapY(c.open,  min, max, canvas.height, pad);
-      const yC = mapY(c.close, min, max, canvas.height, pad);
+      if (i % tickEvery !== 0 && i !== candles.length - 1) return;
+      const x   = PAD_LEFT + i * step + step / 2;
+      const lbl = c.timestamp ? fmtHM(c.timestamp) : "";
+      if (!lbl) return;
+      ctx.fillText(lbl, x, canvas.height - PAD_BOTTOM + 16);
+    });
+    ctx.textAlign = "left";
+
+    // ローソク足描画 & スクリーン座標記録
+    candleScreenData = [];
+    function mapY(p) {
+      if (max === min) return PAD_TOP + cH / 2;
+      return PAD_TOP + cH - ((p - min) / (max - min)) * cH;
+    }
+
+    candles.forEach((c, i) => {
+      const x  = PAD_LEFT + i * step + step / 2;
+      const yH = mapY(c.high);  const yL = mapY(c.low);
+      const yO = mapY(c.open);  const yC = mapY(c.close);
       const up = c.close >= c.open;
       ctx.strokeStyle = up ? "#22c55e" : "#ef4444";
       ctx.fillStyle   = ctx.strokeStyle;
+      ctx.lineWidth   = 1;
       ctx.beginPath(); ctx.moveTo(x, yH); ctx.lineTo(x, yL); ctx.stroke();
-      ctx.fillRect(x - step*.25, Math.min(yO, yC), step*.5, Math.max(3, Math.abs(yC - yO)));
+      const bodyTop = Math.min(yO, yC);
+      const bodyH   = Math.max(2, Math.abs(yC - yO));
+      ctx.fillRect(x - step * 0.3, bodyTop, step * 0.6, bodyH);
+      candleScreenData.push({ x, candle: c });
     });
-    const fix = chartAsset === "BTC" ? 0 : 3;
-    ctx.fillStyle = "#94a3b8"; ctx.font = "12px system-ui";
-    ctx.fillText(`High $${max.toFixed(fix)}`, 22, canvas.height - 14);
-    ctx.fillText(`Low  $${min.toFixed(fix)}`, 130, canvas.height - 14);
-  }
 
-  function mapY(p, min, max, height, pad) {
-    if (max === min) return height / 2;
-    return height - pad - ((p - min) / (max - min)) * (height - pad * 2);
+    // X軸の線
+    ctx.strokeStyle = "#334155"; ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(PAD_LEFT, PAD_TOP + cH);
+    ctx.lineTo(canvas.width - PAD_RIGHT, PAD_TOP + cH);
+    ctx.stroke();
   }
 
   start();
