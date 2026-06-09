@@ -292,6 +292,47 @@
     </div>
   </div>
 
+  <!-- トークン発行所 + 発行済みトークン一覧 -->
+  <div class="trade-grid" style="margin-bottom:14px;">
+    <div class="card">
+      <strong>🪙 トークン発行所</strong>
+      <div class="field-label" style="margin-top:8px;color:#f59e0b;">発行コスト: 100 LUMA</div>
+      <div style="display:flex;flex-direction:column;gap:8px;margin-top:10px;">
+        <div>
+          <div class="field-label">トークン名</div>
+          <input class="tx-input" id="tkName" type="text" maxlength="32" placeholder="例: HashCoin" style="width:100%">
+        </div>
+        <div>
+          <div class="field-label">シンボル（2〜6文字・英数字大文字）</div>
+          <input class="tx-input" id="tkSymbol" type="text" maxlength="6" placeholder="例: YUZU" style="width:100%;text-transform:uppercase">
+        </div>
+        <div style="display:flex;gap:8px;">
+          <div style="flex:1;">
+            <div class="field-label">最大発行枚数</div>
+            <input class="tx-input" id="tkMaxSupply" type="number" min="1" step="1" placeholder="例: 1000000" style="width:100%">
+          </div>
+          <div style="flex:1;">
+            <div class="field-label">初期流通枚数</div>
+            <input class="tx-input" id="tkInitSupply" type="number" min="1" step="1" placeholder="例: 100000" style="width:100%">
+          </div>
+        </div>
+        <div>
+          <div class="field-label">初期価格（USD）</div>
+          <input class="tx-input" id="tkPrice" type="number" min="0.0001" step="0.0001" placeholder="例: 0.01" style="width:100%">
+        </div>
+        <button class="btn btn-upgrade" onclick="mintToken()" style="width:100%;margin-top:4px;">🚀 トークンを発行する（100 LUMA）</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+        <strong>📋 発行済みトークン一覧</strong>
+        <button class="btn btn-chart" onclick="loadTokens()" style="padding:5px 10px;font-size:12px;">更新</button>
+      </div>
+      <div id="tokenList" style="font-size:12px;color:#94a3b8;">読み込み中...</div>
+    </div>
+  </div>
+
   <!-- 取引ログ -->
   <div class="card" style="margin-bottom:14px;">
     <strong>📋 取引ログ（直近30件）</strong>
@@ -474,16 +515,23 @@
   // ─── グローバルチャット ────────────────────────────────────────
   function listenChat() {
     const q = query(
-      collection(db, "game", "chat", "messages"),
+      collection(db, "chats"),
       orderBy("createdAt", "desc"),
       limit(50)
     );
-    onSnapshot(q, snap => {
-      const msgs = [];
-      snap.forEach(d => msgs.push({ id: d.id, ...d.data() }));
-      msgs.reverse();
-      renderChat(msgs);
-    });
+    onSnapshot(q,
+      snap => {
+        const msgs = [];
+        snap.forEach(d => msgs.push({ id: d.id, ...d.data() }));
+        msgs.reverse();
+        renderChat(msgs);
+      },
+      err => {
+        console.error("Chat error:", err.code, err.message);
+        const box = document.getElementById("chatMsgs");
+        box.innerHTML = `<div class="chat-empty">チャット接続エラー: ${err.message}</div>`;
+      }
+    );
   }
 
   function renderChat(msgs) {
@@ -516,7 +564,7 @@
     if (now - lastChatAt < 3000) { setStatus("連投防止: 3秒待ってください。"); return; }
     lastChatAt = now;
     input.value = "";
-    await addDoc(collection(db, "game", "chat", "messages"), {
+    await addDoc(collection(db, "chats"), {
       uid, name: displayName, text, createdAt: serverTimestamp()
     });
   };
@@ -585,6 +633,84 @@
     }
   };
 
+  // ─── トークン発行 ────────────────────────────────────────────
+  window.mintToken = async function() {
+    if (!uid) return;
+    const name       = document.getElementById("tkName").value.trim();
+    const symbolRaw  = document.getElementById("tkSymbol").value.trim().toUpperCase();
+    const maxSupply  = Number(document.getElementById("tkMaxSupply").value);
+    const initSupply = Number(document.getElementById("tkInitSupply").value);
+    const price      = Number(document.getElementById("tkPrice").value);
+
+    if (!name)    { setStatus("トークン名を入力してください"); return; }
+    if (!/^[A-Z0-9]{2,6}$/.test(symbolRaw)) { setStatus("シンボルは2〜6文字の英数字大文字で入力してください"); return; }
+    if (!maxSupply  || maxSupply  < 1) { setStatus("最大発行枚数を入力してください"); return; }
+    if (!initSupply || initSupply < 1) { setStatus("初期流通枚数を入力してください"); return; }
+    if (initSupply > maxSupply)        { setStatus("初期流通枚数は最大発行枚数以下にしてください"); return; }
+    if (!price || price <= 0)          { setStatus("初期価格を入力してください"); return; }
+    if ((userData?.luma ?? 0) < 100)   { setStatus("LUMA不足: トークン発行には100 LUMAが必要です"); return; }
+
+    setStatus("発行処理中...");
+    try {
+      const res = await fetch("/api/tokens", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          uid, ownerName: displayName, name,
+          symbol: symbolRaw, maxSupply,
+          circulatingSupply: initSupply,
+          initialPrice: price,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? "発行失敗");
+      setStatus(`✅ ${symbolRaw} トークンを発行しました！`);
+      addLog("mine", `トークン発行: ${name} (${symbolRaw})`);
+      ["tkName","tkSymbol","tkMaxSupply","tkInitSupply","tkPrice"].forEach(id => {
+        document.getElementById(id).value = "";
+      });
+      await loadTokens();
+    } catch(e) {
+      setStatus("発行エラー: " + e.message);
+      addLog("err", "発行エラー: " + e.message);
+    }
+  };
+
+  async function loadTokens() {
+    const listEl = document.getElementById("tokenList");
+    if (!listEl) return;
+    try {
+      const res    = await fetch("/api/tokens");
+      const data   = await res.json();
+      const tokens = data.tokens ?? [];
+      if (!tokens.length) {
+        listEl.innerHTML = '<div class="log-empty">まだトークンが発行されていません</div>';
+        return;
+      }
+      listEl.innerHTML = `
+        <table style="width:100%;border-collapse:collapse;">
+          <thead><tr style="color:#64748b;font-size:11px;">
+            <th style="text-align:left;padding:4px 5px;">シンボル</th>
+            <th style="text-align:left;padding:4px 5px;">名前</th>
+            <th style="text-align:right;padding:4px 5px;">価格</th>
+            <th style="text-align:right;padding:4px 5px;">時価総額</th>
+            <th style="text-align:left;padding:4px 5px;">発行者</th>
+          </tr></thead>
+          <tbody>
+            ${tokens.map(t => `<tr style="border-top:1px solid rgba(148,163,184,.1);">
+              <td style="padding:5px;font-weight:700;color:#f59e0b;">${esc(t.symbol)}</td>
+              <td style="padding:5px;color:#e2e8f0;">${esc(t.name)}</td>
+              <td style="padding:5px;text-align:right;color:#34d399;">$${Number(t.price??0).toFixed(4)}</td>
+              <td style="padding:5px;text-align:right;color:#94a3b8;">$${money(t.marketCap??0)}</td>
+              <td style="padding:5px;color:#94a3b8;">${esc(t.ownerName??"")}</td>
+            </tr>`).join("")}
+          </tbody>
+        </table>`;
+    } catch(e) {
+      listEl.innerHTML = `<div class="log-empty">読み込みエラー: ${e.message}</div>`;
+    }
+  }
+
   // ─── Firebase 起動 ────────────────────────────────────────────
   async function start() {
     setStatus("匿名ログイン中...");
@@ -594,6 +720,7 @@
         await createUserIfNeeded(user);
         listenGameState();
         listenChat();
+        loadTokens();
       }
     });
   }
